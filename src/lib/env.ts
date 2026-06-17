@@ -11,6 +11,8 @@ interface AppEnv {
   appEnv: "local" | "preview" | "production";
   /** True when Supabase credentials are present; lets the UI degrade gracefully. */
   configured: boolean;
+  /** When unconfigured, the app runs on in-memory demo data so it stays clickable. */
+  demoMode: boolean;
 }
 
 function read(key: string): string | undefined {
@@ -27,4 +29,5 @@ export const env: AppEnv = {
   mapboxToken: read("VITE_MAPBOX_TOKEN") ?? null,
   appEnv: (read("VITE_APP_ENV") as AppEnv["appEnv"]) ?? "local",
   configured: Boolean(supabaseUrl && supabaseAnonKey),
+  demoMode: !(supabaseUrl && supabaseAnonKey),
 };
