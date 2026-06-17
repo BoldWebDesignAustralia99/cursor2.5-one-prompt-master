@@ -110,10 +110,10 @@ select 'developer', key, true from public.permissions where key in
   ('dashboard.view','system.view','system.manage','workflows.view','workflows.manage',
    'flags.manage','settings.manage','activities.view','templates.manage','notifications.manage');
 
-insert into public.role_permissions (role_key, permission_key, allowed)
-select 'clinic_admin', key, true from public.permissions where key in ('dashboard.view');
-insert into public.role_permissions (role_key, permission_key, allowed)
-select 'clinic_staff', key, true from public.permissions where key in ('dashboard.view');
+-- Clinic roles get NO global permission keys: every capability they have is
+-- granted structurally by clinic membership in RLS (is_clinic_member /
+-- is_clinic_admin). This keeps them cleanly scoped to their own clinic(s) — they
+-- cannot reach any internal surface even by direct URL.
 
 -- ---------------------------------------------------------------------------
 -- Classification classes (billable map; settings-editable later)

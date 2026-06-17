@@ -45,8 +45,9 @@ export const ROLE_PERMS: Record<RoleKey, string[]> = {
     "workflows.manage", "flags.manage", "settings.manage", "activities.view",
     "templates.manage", "notifications.manage",
   ],
-  clinic_admin: ["dashboard.view"],
-  clinic_staff: ["dashboard.view"],
+  // Clinic roles hold no global keys — access is entirely RLS clinic-scoped.
+  clinic_admin: [],
+  clinic_staff: [],
 };
 
 export interface DemoPersona extends MeContext {

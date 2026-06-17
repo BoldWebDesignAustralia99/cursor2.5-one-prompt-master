@@ -1,7 +1,7 @@
 import * as React from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  Moon, Sun, Search, Bell, LogOut, ChevronsUpDown, Command, Stethoscope,
+  Moon, Sun, Search, Bell, LogOut, ChevronsUpDown, Command, Stethoscope, UserCircle,
 } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
@@ -159,6 +159,9 @@ export function AppShell() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => navigate("/profile")}>
+                  <UserCircle className="h-4 w-4" /> Profile
+                </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => navigate("/notifications")}>
                   <Bell className="h-4 w-4" /> Notifications
                 </DropdownMenuItem>

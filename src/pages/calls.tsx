@@ -2,7 +2,12 @@ import * as React from "react";
 import {
   Phone, PhoneOff, Mic, MicOff, Pause, ChevronLeft, ChevronRight, Send,
   MapPin, Star, CircleDot, CheckCircle2, MessageSquareText, Sparkles, PartyPopper,
+  MoreHorizontal, Flame, HandCoins, Plus,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tabs as RefTabs, TabsContent as RefTabsContent, TabsList as RefTabsList, TabsTrigger as RefTabsTrigger } from "@/components/ui/tabs";
 import { useCallQueue, useTemplates, useClinicHealth } from "@/services/queries";
 import { PageBody, PageHeader, ListSkeleton, EmptyState } from "@/components/layout/page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,6 +127,9 @@ function FocusedCallView({ lead, onBack }: { lead: Lead; onBack: () => void }) {
   const [financeEligible, setFinanceEligible] = React.useState<boolean | null>(lead.finance_eligible);
   const [selectedClinic, setSelectedClinic] = React.useState<string | null>(null);
   const [confetti, setConfetti] = React.useState(false);
+  const [brokerReferred, setBrokerReferred] = React.useState(!!lead.broker_referral_at);
+  const [manualNotes, setManualNotes] = React.useState<string[]>([]);
+  const [noteDraft, setNoteDraft] = React.useState("");
 
   // dialogs
   const [pricingOpen, setPricingOpen] = React.useState(false);
@@ -169,6 +177,7 @@ function FocusedCallView({ lead, onBack }: { lead: Lead; onBack: () => void }) {
               <p className="font-semibold">{lead.full_name}</p>
               <p className="text-xs text-muted-foreground">{lead.phone} · {lead.suburb}</p>
             </div>
+            <Badge variant="attention" className="gap-1"><Flame className="h-3 w-3" /> 6-day streak</Badge>
           </div>
           <div className="flex items-center gap-2">
             {onCall ? (
@@ -223,8 +232,9 @@ function FocusedCallView({ lead, onBack }: { lead: Lead; onBack: () => void }) {
             <Separator className="my-2" />
             <p className="px-2 text-[11px] font-medium uppercase text-muted-foreground">Lead facts</p>
             <Fact label="Wants" value={(lead.metadata as { wants?: string })?.wants ?? "—"} />
-            <Fact label="Funding" value={lead.finance_eligible ? "Eligible" : "Unknown"} />
-            <Fact label="Suburb" value={lead.suburb ?? "—"} />
+            <Fact label="Funding" value={lead.finance_eligible === true ? "Eligible" : lead.finance_eligible === false ? "Not eligible" : "Unknown"} />
+            <Fact label="With them" value={(lead.metadata as { with_them?: string })?.with_them ?? "—"} />
+            <p className="px-2 pt-1 text-[10px] text-muted-foreground">Notes stay live throughout the call.</p>
           </CardContent>
         </Card>
 
@@ -239,6 +249,16 @@ function FocusedCallView({ lead, onBack }: { lead: Lead; onBack: () => void }) {
               <Button variant="ghost" size="icon" disabled={stageIdx === CALL_FLOW.length - 1} onClick={() => completeStage(stageIdx)}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label="Stage actions"><MoreHorizontal className="h-4 w-4" /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => completeStage(stageIdx)}><CheckCircle2 className="h-4 w-4" /> Mark stage done</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => navigator.clipboard?.writeText(SCRIPT[CALL_FLOW[stageIdx].key]).then(() => toast.success("Script copied"))}>Copy script</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => toast.info("Stage skipped")}>Skip stage</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -273,7 +293,52 @@ function FocusedCallView({ lead, onBack }: { lead: Lead; onBack: () => void }) {
                 ) : (
                   <p className="text-muted-foreground">Notes begin writing themselves when the call starts.</p>
                 )}
+                {manualNotes.map((n, i) => <AiNote key={i} who="You" text={n} />)}
               </div>
+              <div className="mt-2 flex gap-2">
+                <Input
+                  placeholder="Add a manual note…"
+                  value={noteDraft}
+                  onChange={(e) => setNoteDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && noteDraft.trim()) {
+                      setManualNotes((n) => [...n, noteDraft.trim()]);
+                      setNoteDraft("");
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Add note"
+                  onClick={() => { if (noteDraft.trim()) { setManualNotes((n) => [...n, noteDraft.trim()]); setNoteDraft(""); } }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
+            <div>
+              <RefTabs defaultValue="objections">
+                <RefTabsList>
+                  <RefTabsTrigger value="objections">Objections</RefTabsTrigger>
+                  <RefTabsTrigger value="questions">Questions</RefTabsTrigger>
+                </RefTabsList>
+                <RefTabsContent value="objections" className="space-y-1.5">
+                  {OBJECTIONS.map((o) => (
+                    <div key={o.q} className="rounded-md border border-border p-2">
+                      <p className="text-sm font-medium">{o.q}</p>
+                      <p className="text-xs text-muted-foreground">{o.a}</p>
+                    </div>
+                  ))}
+                </RefTabsContent>
+                <RefTabsContent value="questions" className="space-y-1.5">
+                  {QUESTIONS.map((q) => (
+                    <p key={q} className="rounded-md border border-border p-2 text-sm">{q}</p>
+                  ))}
+                </RefTabsContent>
+              </RefTabs>
             </div>
           </CardContent>
         </Card>
@@ -334,6 +399,17 @@ function FocusedCallView({ lead, onBack }: { lead: Lead; onBack: () => void }) {
             <div className="space-y-1.5">
               <GateRow label="Pricing provided" ok={pricingProvided} onClick={() => setPricingOpen(true)} />
               <GateRow label="Finance check" ok={financeEligible === true} warn={financeEligible === false} onClick={() => setFinanceOpen(true)} />
+              {financeEligible === false ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-1.5"
+                  onClick={() => { setBrokerReferred(true); toast.success("Broker referral captured", { description: "Timestamped on the lead." }); }}
+                >
+                  <HandCoins className="h-4 w-4" />
+                  {brokerReferred ? "Broker referral captured" : "Capture broker referral"}
+                </Button>
+              ) : null}
             </div>
             <Button className="mt-2 w-full" disabled={!selectedClinic} onClick={attemptBook}>
               Close, take deposit & book
@@ -369,6 +445,19 @@ const SCRIPT: Record<string, string> = {
   match: "Based on where you are, the best clinic is Moorooka — senior dentist on site, about 47 minutes away.",
   close: "Let's lock in your free consult. I'll take a small refundable $75 hold to secure the chair — ready?",
 };
+
+const OBJECTIONS = [
+  { q: "I need to talk to my partner", a: "Absolutely — let's get you both the info. Can I book the free consult so they can come too?" },
+  { q: "It's too expensive", a: "That's why the consult is free and we check finance — most patients are surprised what's affordable." },
+  { q: "I'm scared of the dentist", a: "Totally normal. Our senior dentists do this daily under sedation options — the consult is just a chat." },
+];
+
+const QUESTIONS = [
+  "How many teeth are we looking at — upper, lower, or both?",
+  "What's prompting you to look into this now?",
+  "Have you had implants or extractions before?",
+  "Is there a budget or finance option you'd prefer?",
+];
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (

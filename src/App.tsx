@@ -27,6 +27,11 @@ import { MessagesPage } from "@/pages/messages";
 import { NotificationsPage } from "@/pages/notifications";
 import { LeadsPage } from "@/pages/leads";
 import { FlagsPage } from "@/pages/flags";
+import { LeaderboardPage } from "@/pages/leaderboard";
+import { TimesheetsPage } from "@/pages/timesheets";
+import { TasksPage } from "@/pages/tasks";
+import { ProfilePage } from "@/pages/profile";
+import { CommunityPage } from "@/pages/community";
 
 function HomeRedirect() {
   const { primaryRole } = useAuth();
@@ -73,6 +78,11 @@ export function App() {
           <Route path="/flags" element={guard("flags.manage", <FlagsPage />)} />
           <Route path="/settings" element={guard("settings.manage", <SettingsPage />)} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/leaderboard" element={guard("dashboard.view", <LeaderboardPage />)} />
+          <Route path="/timesheets" element={guard("dashboard.view", <TimesheetsPage />)} />
+          <Route path="/tasks" element={guard("dashboard.view", <TasksPage />)} />
+          <Route path="/community" element={guard("dashboard.view", <CommunityPage />)} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
