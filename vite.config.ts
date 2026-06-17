@@ -14,18 +14,13 @@ export default defineConfig({
     host: true,
   },
   build: {
+    // Separate third-party code from app code for better caching. Kept as a
+    // single vendor chunk on purpose: splitting React across chunks can break
+    // module load order and blank the app, so we don't do that.
     rollupOptions: {
       output: {
-        // Split vendors so the app shell stays small and caches well.
         manualChunks(id) {
-          if (!id.includes("node_modules")) return;
-          if (id.includes("react-dom") || id.includes("react-router") || id.includes("/react/"))
-            return "vendor-react";
-          if (id.includes("@radix-ui") || id.includes("cmdk") || id.includes("lucide-react"))
-            return "vendor-ui";
-          if (id.includes("@supabase") || id.includes("@tanstack")) return "vendor-data";
-          if (id.includes("recharts") || id.includes("d3")) return "vendor-charts";
-          return "vendor";
+          if (id.includes("node_modules")) return "vendor";
         },
       },
     },
