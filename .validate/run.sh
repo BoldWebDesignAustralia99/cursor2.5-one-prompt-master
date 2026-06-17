@@ -17,4 +17,7 @@ for f in /workspace/supabase/migrations/*.sql; do
   $PSQL -d gumbo_validate -q -f "$f"
 done
 
-echo "OK — all migrations applied cleanly."
+echo "Applying seed.sql…"
+$PSQL -d gumbo_validate -q -f /workspace/supabase/seed.sql
+
+echo "OK — all migrations + seed applied cleanly."
